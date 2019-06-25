@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button prevButton;
     private Button playButton;
     private Button nextButton;
+    private Thread thread;
 
 
     @Override
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()){
             case R.id.prevButton:
                 //do stuff
-
+                backMusic();
                 break;
 
             case R.id.playButton:
@@ -97,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.nextButton:
-
+                    nextMusic();
                 break;
         }
     }
@@ -112,8 +113,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void startMusic(){
         if (mediaPlayer != null){
             mediaPlayer.start();
+            updateThread();
             playButton.setBackgroundResource(android.R.drawable.ic_media_pause);
         }
     }
 
+    public void backMusic() {
+        if (mediaPlayer.isPlaying()) {
+            // temporary cause we only have one song
+            mediaPlayer.seekTo(0);
+        }
+    }
+
+    public void nextMusic() {
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.seekTo(mediaPlayer.getDuration() - 1000);
+        }
+    }
+
+    private void updateThread(){
+
+        thread = new Thread(){
+            @Override
+            public void run() {
+                try {
+                    while(mediaPlayer !=null && mediaPlayer.isPlaying()) {
+                        Thread.sleep(50);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                int newPosition = mediaPlayer.getCurrentPosition();
+                                int newMax = mediaPlayer.getDuration();
+                                seekBar.setMax(newMax);
+                                seekBar.setProgress(newPosition);
+
+                                //update text
+                                leftTime.setText(String.valueOf(new java.text.SimpleDateFormat("mm:ss")
+                                .format(new Date(mediaPlayer.getCurrentPosition()))));
+
+                                rightTime.setText(String.valueOf((new java.text.SimpleDateFormat("mm:ss")
+                                .format(new Date(mediaPlayer.getDuration() - mediaPlayer.getCurrentPosition())))));
+                            }
+                        });
+                    }
+
+                }catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        thread.start();
+
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer = null;// completely clear from memory
+        }
+        thread.interrupt();
+        thread = null;
+        super.onDestroy();
+    }
 }// end MainActivity
