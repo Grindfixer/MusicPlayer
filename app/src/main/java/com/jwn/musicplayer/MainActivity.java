@@ -10,6 +10,9 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     private MediaPlayer mediaPlayer;
     private ImageView artistImage;
@@ -27,6 +30,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         setUpUI();
+
+        seekBar.setMax(mediaPlayer.getDuration());
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                if(b/*if the change comes from b (T or F) - b represents user*/){
+                    mediaPlayer.seekTo(i);//i represents progress of seekBar
+                }
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("mm:ss");
+                int currentPos = mediaPlayer.getCurrentPosition();
+                int duration = mediaPlayer.getDuration();
+
+                leftTime.setText(dateFormat.format(new Date(currentPos)));
+                rightTime.setText(dateFormat.format(new Date(duration - currentPos)));
+
+            }// end onProgressChanged
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
     }
 
     public void setUpUI(){
